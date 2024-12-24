@@ -116,7 +116,7 @@ options = Options()
 #options.add_argument('--start-maximized')
 options.add_argument('--force-device-scale-factor=0.01')
 #options.add_argument('--headless')  # Run in headless mode if you don't need to see the browser
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(service=Service("chromedriver-win64\chromedriver-win64\chromedriver.exe"), options=options)
 
 # main script
 print('Welcome to Musescore Downloader')

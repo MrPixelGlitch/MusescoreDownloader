@@ -1,17 +1,16 @@
-import shutil
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 import os
+import re
+import shutil
 import requests
 import cairosvg
 import PyPDF2
-import re
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+
+
 
 
 def get_score_title(soup):
@@ -22,18 +21,23 @@ def get_score_title(soup):
     else:
         return None
 
-def download_score_svg(urls):
+def download_score_svg(urls, referer_url):
     # Create the subfolder if it doesn't exist
     if not os.path.exists("downloads"):
         os.makedirs("downloads")
     
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Referer": referer_url,
+    }
+
     # Iterate over the list of URLs
     for i, url in enumerate(urls):
         # Define the path to save the file with an incremented number
         file_path = os.path.join("downloads", f"score_{i+1}.svg")
 
         # Send a GET request to the URL
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
 
         # Check if the request was successful
         if response.status_code == 200:
@@ -108,15 +112,13 @@ def combine_pdfs(output_file_name):
     with open(output_path, "wb") as file:
         pdf_writer.write(file)
 
-    #print(f"Combined PDF file saved to '{output_path}'.")
 
 
 # Initialize the WebDriver with headless option
 options = Options()
 #options.add_argument('--start-maximized')
 options.add_argument('--force-device-scale-factor=0.01')
-#options.add_argument('--headless')  # Run in headless mode if you don't need to see the browser
-driver = webdriver.Chrome(service=Service("chromedriver-win64\chromedriver-win64\chromedriver.exe"), options=options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 # main script
 print('Welcome to Musescore Downloader')
@@ -142,11 +144,6 @@ try:
     print("Extracting Title")
     title = get_score_title(soup)
 
-    # Save the page source to an HTML file
-    #with open(f'{title}.html', 'w', encoding='utf-8') as file:
-    #    file.write(page_source)
-
-
     images = []
     divs = soup.find_all('div', class_='EEnGW F16e6')
     for div in divs:
@@ -154,13 +151,9 @@ try:
         for img_tag in img_tags:
             src = img_tag.get('src')
             images.append(src)
-    
-    #print("Images found:")
-    #for image in images:
-    #    print(image)
 
     print("Extracting Pages...")    
-    download_score_svg(images)
+    download_score_svg(images, url)
     convert_svg_to_pdf()
     print("Converting Pages...")
     combine_pdfs(title)

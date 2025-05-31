@@ -1,0 +1,6 @@
+beautifulsoup4
+selenium
+cairosvg
+PyPDF2
+requests
+webdriver-manager
